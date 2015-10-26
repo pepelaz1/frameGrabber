@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui widgets winextras serialport
-TARGET = HauppageApp
+TARGET = FrameGrabberApp
 TEMPLATE = app
 
 

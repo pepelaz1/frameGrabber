@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     int y = (screenGeometry.height()-w.height()) / 2;
     w.move(x, y);
 
-    w.setWindowTitle("HauppageApp");
+    w.setWindowTitle("FrameGrabberApp");
     w.show();
     w.listen();
 

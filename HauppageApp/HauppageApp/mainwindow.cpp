@@ -67,7 +67,7 @@ void MainWindow::on_serialPort_data()
      QString data(m_serialPort->readAll());
      //qDebug() << "Data received, pinout signals: " << QString::number(signs) << ", data: " << data;
 
-     QFile f("hauppage.log");
+     QFile f("framegrabberapp.log");
      f.open(QIODevice::Append | QIODevice::Text);
      QTextStream s(&f);
      s  << "Data received, pinout signals: " << QString::number(signs) << ", data: " << data << "\n";
