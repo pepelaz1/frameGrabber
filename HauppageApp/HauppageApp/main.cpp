@@ -1,18 +1,24 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QDate>
+#include <QDir>
 #include "mainwindow.h"
 #include "serialportreader.h"
 
 int main(int argc, char *argv[])
 {
+    QStringList paths = QCoreApplication::libraryPaths();
+
+    paths.append(".");
+    paths.append("plugins");
+    QCoreApplication::setLibraryPaths(paths);
+
+
     QApplication a(argc, argv);
+
+
     MainWindow w;
     w.setFixedSize(800,630);
-
-
-
-
     QRect screenGeometry = QApplication::desktop()->availableGeometry();
 
     int x = (screenGeometry.width()-w.width()) / 2;

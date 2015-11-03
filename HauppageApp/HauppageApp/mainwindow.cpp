@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QtWin>
+#include <QThread>
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -20,25 +21,98 @@ MainWindow::MainWindow(QWidget *parent) :
 
     populateDevices();
     populatePorts();
-    ui->le_output->setText("C:/Output");
 
+    m_settingsFile = QApplication::applicationDirPath() + "/framegrabberapp.ini";
+    loadSettings();
 
     enableControls(false);
     updateSrcControls();
 
     m_serialPort = new QSerialPort();
-    connect(m_serialPort, SIGNAL(readyRead()), SLOT(on_serialPort_data()));
+    connect(m_serialPort, SIGNAL(readyRead()), SLOT(on_readyRead()));
+    connect(m_serialPort, SIGNAL(baudRateChanged(qint32, QSerialPort::Directions)),
+            SLOT(on_baudRateChanged(qint32, QSerialPort::Directions)));
+    connect(m_serialPort, SIGNAL(breakEnabledChanged(bool)), SLOT(on_breakEnabledChanged(bool)));
+    connect(m_serialPort, SIGNAL(dataBitsChanged(QSerialPort::DataBits)),
+            SLOT(on_dataBitsChanged(QSerialPort::DataBits)));
+    connect(m_serialPort, SIGNAL(dataTerminalReadyChanged(bool)),
+            SLOT(on_dataTerminalReadyChanged(bool)));
+    connect(m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)),
+            SLOT(on_error(QSerialPort::SerialPortError)));
+    connect(m_serialPort, SIGNAL(flowControlChanged(QSerialPort::FlowControl)),
+            SLOT(on_flowControlChanged(QSerialPort::FlowControl)));
+    connect(m_serialPort, SIGNAL(parityChanged(QSerialPort::Parity )),
+            SLOT(on_parityChanged(QSerialPort::Parity)));
+    connect(m_serialPort, SIGNAL(requestToSendChanged(bool)),
+            SLOT(on_requestToSendChanged(bool)));
+    connect(m_serialPort, SIGNAL(stopBitsChanged(QSerialPort::StopBits)),
+            SLOT(on_stopBitsChanged(QSerialPort::StopBits)));
+
+
+    m_pinouts = QSerialPort::NoSignal;
+    initListener();
 
     on_pb_capture_clicked();
- }
+
+    writeLog("application started");
+   // QString s = "Pinout signals: " +  QString::number(m_pinouts);
+   // writeLog(s);
+}
+
+void MainWindow::initListener()
+{
+    m_listener = new Listener();
+    QThread* thread = new QThread;
+    m_listener->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), m_listener, SLOT(process()));
+    connect(m_listener, SIGNAL(quant()), this, SLOT(on_quant()));
+
+    thread->start();
+}
+
+void  MainWindow::on_quant()
+{
+    QSerialPort::PinoutSignals pinouts = m_serialPort->pinoutSignals();
+    if (pinouts != m_pinouts)
+    {
+         QString s = "Pinout signals: " +  QString::number(pinouts);
+         writeLog(s);
+         m_pinouts = pinouts;
+    }
+
+}
+
+void MainWindow::closeEvent (QCloseEvent *)
+{
+    m_listener->stop();
+    saveSettings();
+    writeLog("application closed");
+}
 
 MainWindow::~MainWindow()
 {
+
+    delete m_listener;
     delete m_serialPort;
     delete ui;
     delete m_capturer;
 
     GraphFactory::resetInstance();
+}
+
+void MainWindow::loadSettings()
+{
+    QSettings settings(m_settingsFile, QSettings::IniFormat);
+    ui->le_output->setText(settings.value("OutputPath", "C:/Output").toString());
+    ui->cb_listenport->setCurrentIndex(settings.value("Port", 0).toInt());
+}
+
+void MainWindow::saveSettings()
+{
+    QSettings settings(m_settingsFile, QSettings::IniFormat);
+    settings.setValue("OutputPath", ui->le_output->text());
+    settings.setValue("Port", ui->cb_listenport->currentIndex());
 }
 
 void MainWindow::listen()
@@ -61,21 +135,81 @@ void MainWindow::on_cb_listenport_currentIndexChanged(int)
     listen();
 }
 
-void MainWindow::on_serialPort_data()
+void MainWindow::writeLog(QString s)
 {
-     QSerialPort::PinoutSignals signs = m_serialPort->pinoutSignals();
-     QString data(m_serialPort->readAll());
-     //qDebug() << "Data received, pinout signals: " << QString::number(signs) << ", data: " << data;
-
      QFile f("framegrabberapp.log");
      f.open(QIODevice::Append | QIODevice::Text);
-     QTextStream s(&f);
-     s  << "Data received, pinout signals: " << QString::number(signs) << ", data: " << data << "\n";
+     QTextStream strm(&f);
+     strm << QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") << "|" << s << "\n";
      f.close();
-
-     if (m_capturer->getState() == IGraph::State_Running)
-         takePicture();
 }
+
+void MainWindow::on_readyRead()
+{
+     QString data(m_serialPort->readAll());
+     writeLog("readyRead signal received, data: " + data
+              + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+
+     //if (m_capturer->getState() == IGraph::State_Running)
+     //    takePicture();
+}
+
+
+void MainWindow::on_baudRateChanged(qint32 baudRate, QSerialPort::Directions directions)
+{
+    writeLog("baudRateChanged signal received, baudRate: " + QString::number(baudRate)
+             + ", directions: " +  QString::number(directions)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+
+}
+void MainWindow::on_breakEnabledChanged(bool set)
+{
+    writeLog("breakEnabledChanged signal received, set: " + QString::number(set)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+}
+
+void MainWindow::on_dataBitsChanged(QSerialPort::DataBits dataBits)
+{
+    writeLog("dataBitsChanged signal received, dataBits: " + QString::number(dataBits)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+}
+
+void MainWindow::on_dataTerminalReadyChanged(bool set)
+{
+    writeLog("dataTerminalReadyChanged signal received, set: " + QString::number(set)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+}
+
+void MainWindow::on_error(QSerialPort::SerialPortError error)
+{
+/*  writeLog("error signal received, error: " + QString::number(error)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals())/); */
+}
+
+void MainWindow::on_flowControlChanged(QSerialPort::FlowControl flow)
+{
+    writeLog("flowControlChanged signal received, flow: " + QString::number(flow)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+}
+
+void MainWindow::on_parityChanged(QSerialPort::Parity parity)
+{
+    writeLog("parityChanged signal received, parity: " + QString::number(parity)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+}
+
+void MainWindow::on_requestToSendChanged(bool set)
+{
+    writeLog("requestToSendChanged signal received, set: " + QString::number(set)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+}
+
+void MainWindow::on_stopBitsChanged(QSerialPort::StopBits stopBits)
+{
+    writeLog("stopBitsChanged signal received, stopBits: " + QString::number(stopBits)
+             + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
+}
+
 
 
 bool MainWindow::rebuildCap()
@@ -106,22 +240,25 @@ void MainWindow::on_pb_browse_clicked()
 
 void MainWindow::on_pb_capture_clicked()
 {
-    if (m_capturer->getState() != IGraph::State_Running)
+    if (ui->cb_videosrc->currentText() != "")
     {
-        m_vsrc = ui->cb_videosrc->currentText();
+        if (m_capturer->getState() != IGraph::State_Running)
+        {
+            m_vsrc = ui->cb_videosrc->currentText();
 
-        if (!rebuildCap())
-            return;
+            if (!rebuildCap())
+                return;
 
-        m_capturer->play();
-        ui->pb_capture->setText("Stop capture");
-        enableControls(true);
-    }
-    else
-    {
-         m_capturer->stop();
-         ui->pb_capture->setText("Start capture");
-         enableControls(false);
+            m_capturer->play();
+            ui->pb_capture->setText("Stop capture");
+            enableControls(true);
+        }
+        else
+        {
+             m_capturer->stop();
+             ui->pb_capture->setText("Start capture");
+             enableControls(false);         
+        }
     }
 }
 

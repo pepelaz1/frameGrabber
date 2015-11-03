@@ -10,9 +10,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    listener.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    listener.h
 
 FORMS    += mainwindow.ui
 
