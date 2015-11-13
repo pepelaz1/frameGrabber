@@ -29,6 +29,16 @@ MainWindow::MainWindow(QWidget *parent) :
     updateSrcControls();
 
     m_serialPort = new QSerialPort();
+
+    m_serialPort->setBaudRate(QSerialPort::Baud9600);
+    m_serialPort->setParity(QSerialPort::EvenParity);
+    m_serialPort->setDataBits(QSerialPort::Data8);
+    m_serialPort->setStopBits(QSerialPort::OneStop);
+    m_serialPort->setDataTerminalReady(false);
+    m_serialPort->setRequestToSend(false);
+   // m_serialPort->setFlowControl(FlowControl)
+
+
     connect(m_serialPort, SIGNAL(readyRead()), SLOT(on_readyRead()));
     connect(m_serialPort, SIGNAL(baudRateChanged(qint32, QSerialPort::Directions)),
             SLOT(on_baudRateChanged(qint32, QSerialPort::Directions)));
@@ -79,6 +89,8 @@ void  MainWindow::on_quant()
          QString s = "Pinout signals: " +  QString::number(pinouts);
          writeLog(s);
          m_pinouts = pinouts;
+
+         takePicture();
     }
 
 }
@@ -150,8 +162,8 @@ void MainWindow::on_readyRead()
      writeLog("readyRead signal received, data: " + data
               + ", pinout signals: " +  QString::number(m_serialPort->pinoutSignals()));
 
-     //if (m_capturer->getState() == IGraph::State_Running)
-     //    takePicture();
+
+     takePicture();
 }
 
 
@@ -316,10 +328,13 @@ void MainWindow::on_pb_take_picture_clicked()
 
 void MainWindow::takePicture()
 {
-    HBITMAP bmp  = m_capturer->getLastFrame();
-    QPixmap pixmap =  QtWin::fromHBITMAP(bmp);
-    QString s = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
-    QFile file(ui->le_output->text() + "\\" + s + ".png");
-    file.open(QIODevice::WriteOnly);
-    pixmap.save(&file, "png");
+    if (m_capturer->getState() == IGraph::State_Running)
+    {
+        HBITMAP bmp  = m_capturer->getLastFrame();
+        QPixmap pixmap =  QtWin::fromHBITMAP(bmp);
+        QString s = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
+        QFile file(ui->le_output->text() + "\\" + s + ".png");
+        file.open(QIODevice::WriteOnly);
+        pixmap.save(&file, "png");
+    }
 }

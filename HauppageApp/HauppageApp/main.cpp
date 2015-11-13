@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     int y = (screenGeometry.height()-w.height()) / 2;
     w.move(x, y);
 
-    w.setWindowTitle("FrameGrabberApp");
+    w.setWindowTitle("FrameGrabberApp v4");
     w.show();
     w.listen();
 
