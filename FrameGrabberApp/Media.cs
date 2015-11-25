@@ -194,15 +194,41 @@ namespace FrameGrabberApp
         public void TakePicture(string fileName)
         {
             int hr = 0;
-
             int size = 0;
             IntPtr p = IntPtr.Zero;
-            basicVideo.GetCurrentImage(ref size, p);
-            DsError.ThrowExceptionForHR(hr);
 
-            p = Marshal.AllocHGlobal(size);
-            basicVideo.GetCurrentImage(ref size, p);
-            DsError.ThrowExceptionForHR(hr);
+            try
+            {
+                _logger.WriteInfo("Attempt to pause graph before making a screenshoot");
+                mediaControl.Pause();
+                FilterState fs = 0;
+                while( mediaControl.GetState(100, out fs) != 0)
+                {
+                    if ( fs != FilterState.Paused)
+                    {
+                        _logger.WriteInfo("Graph is not it paused state. Continue waiting...");
+                         continue;
+                    }
+                    _logger.WriteInfo("Graph is paused now");
+                    break;
+                }
+             
+                hr = basicVideo.GetCurrentImage(ref size, p);
+                DsError.ThrowExceptionForHR(hr);
+
+                p = Marshal.AllocHGlobal(size);
+                basicVideo.GetCurrentImage(ref size, p);
+                //DsError.ThrowExceptionForHR(hr);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                mediaControl.Run();
+            }
+           
 
             BitmapInfoHeader head;
             head = (BitmapInfoHeader)Marshal.PtrToStructure(p, typeof(BitmapInfoHeader));
@@ -230,7 +256,9 @@ namespace FrameGrabberApp
 
             Bitmap b = new Bitmap(width, height, stride, pixelFormat, p);
             b.RotateFlip(RotateFlipType.RotateNoneFlipY);
-            b.Save(fileName, ImageFormat.Png);        
+            b.Save(fileName, ImageFormat.Png);  
+      
+            
         }
 
         protected override void WndProc(ref Message m)
