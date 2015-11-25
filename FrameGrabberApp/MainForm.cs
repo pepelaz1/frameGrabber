@@ -1,76 +1,58 @@
-﻿// Snapshot Maker sample application
-// AForge.NET Framework
-// http://www.aforgenet.com/framework/
-//
-// Copyright © AForge.NET, 2009-2011
-// contacts@aforgenet.com
-//
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-
-using AForge.Video;
-using AForge.Video.DirectShow;
 using System.IO.Ports;
 using FrameGrabberApp.Properties;
 using System.IO;
+using FrameGrabberApp;
+using System.Reflection;
 
-namespace Snapshot_Maker
+namespace FrameGrabberApp
 {
     public partial class MainForm : Form
     {
-        private FilterInfoCollection _videoDevices;
-        private VideoCaptureDevice _videoDevice;
-        private VideoCapabilities[] _videoCapabilities;
-        private VideoCapabilities[] _snapshotCapabilities;
-
-       
-        private bool _take = false;
         private SerialPort _serial = new SerialPort();
+        private Media _media = new Media();
+        private Logger _logger = new Logger();
 
         public MainForm( )
         {
             InitializeComponent( );
+            _logger.Init( Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)
+                + @"\FrameGrabberApp.log");
+            _logger.WriteInfo("Application started");
         }
 
-        // Main form is loaded
+   
         private void MainForm_Load( object sender, EventArgs e )
         {
-          
-            // enumerate video devices
-            _videoDevices = new FilterInfoCollection( FilterCategory.VideoInputDevice );
-
-            if ( _videoDevices.Count != 0 )
+            try
             {
-                // add all devices to combo
-                foreach ( FilterInfo device in _videoDevices )
-                {
-                    cmbDevices.Items.Add( device.Name );
-                }
+                 _media.Init(_logger);
+                foreach (string device in _media.EnumCaptureDevices())
+                     cmbDevices.Items.Add(device);
+
+                cmbDevices.SelectedIndex = 0;
+                cmbPort.SelectedIndex = 0;
+
+                EnableControls(true);
+
+                LoadSettings();
+
+                InitSerial();
+
+                StartCapture();
             }
-            else
+            catch (Exception ex)
             {
-                cmbDevices.Items.Add( "No DirectShow devices found" );
+                _logger.WriteError("Failed to load main form - " + ex.Message);
             }
-
-            cmbDevices.SelectedIndex = 0;
-           // cmbPort.SelectedIndex = 0;
-
-            EnableControls( true );
-
-            LoadSettings();
-
-            //InitSerial();
-
-            StartCapture();
+               
         }
-
-        // Closing the main form
         private void MainForm_FormClosing( object sender, FormClosingEventArgs e )
         {
             SaveSettings();
@@ -79,87 +61,51 @@ namespace Snapshot_Maker
             _serial.PinChanged -= _serial_PinChanged;
         }
 
-        // Enable/disable connection related controls
         private void EnableControls( bool enable )
         {
             cmbDevices.Enabled = enable;
-            btnPicture.Enabled = ( !enable ) && ( _snapshotCapabilities.Length != 0 );
+            btnPicture.Enabled = !enable;
             //cmbPort.Enabled = enable;
             tbOutputFolder.Enabled = enable;
             btnBrowse.Enabled = enable;
             
         }
 
-        // New video device is selected
-        private void devicesCombo_SelectedIndexChanged( object sender, EventArgs e )
-        {
-            if ( _videoDevices.Count != 0 )
-            {
-                _videoDevice = new VideoCaptureDevice( _videoDevices[cmbDevices.SelectedIndex].MonikerString );
-                EnumeratedSupportedFrameSizes( _videoDevice );
-            }
-        }
+        //// New video device is selected
+        //private void devicesCombo_SelectedIndexChanged( object sender, EventArgs e )
+        //{
+        //    //if ( _videoDevices.Count != 0 )
+        //    //{
+        //    //    _videoDevice = new VideoCaptureDevice( _videoDevices[cmbDevices.SelectedIndex].MonikerString );
+        //    //    EnumeratedSupportedFrameSizes( _videoDevice );
+        //    //}
+        //}
 
         // Collect supported video and snapshot sizes
-        private void EnumeratedSupportedFrameSizes( VideoCaptureDevice videoDevice )
-        {
-            this.Cursor = Cursors.WaitCursor;
+        //private void EnumeratedSupportedFrameSizes( VideoCaptureDevice videoDevice )
+        //{
+        //    this.Cursor = Cursors.WaitCursor;
 
-            try
-            {
-                _videoCapabilities = videoDevice.VideoCapabilities;
-                _snapshotCapabilities = videoDevice.SnapshotCapabilities;
-            }
-            finally
-            {
-                this.Cursor = Cursors.Default;
-            }
-        }
+        //    try
+        //    {
+        //        //_videoCapabilities = videoDevice.VideoCapabilities;
+        //        //_snapshotCapabilities = videoDevice.SnapshotCapabilities;
+        //    }
+        //    finally
+        //    {
+        //        this.Cursor = Cursors.Default;
+        //    }
+        //}
 
   
 
-        // Disconnect from video device
-        private void StopCapture( )
-        {
-            if ( videoSourcePlayer.VideoSource != null )
-            {
-                // stop video device
-                videoSourcePlayer.SignalToStop( );
-                videoSourcePlayer.WaitForStop( );
-                videoSourcePlayer.VideoSource = null;
-
-                if ( _videoDevice.ProvideSnapshots )
-                {
-                    _videoDevice.SnapshotFrame -= videoDevice_SnapshotFrame;
-                }
-
-                EnableControls( true );
-                btnCapture.Text = "Start capture";
-            }
-        }
-
+       
         // Simulate snapshot trigger
         private void triggerButton_Click( object sender, EventArgs e )
         {
-            _take = true;
-
-            //if ( ( videoDevice != null ) && ( videoDevice.ProvideSnapshots ) )
-            //{
-            //    videoDevice.SimulateTrigger( );
-            //}
         }
 
-        // New snapshot frame is available
-        private void videoDevice_SnapshotFrame( object sender, NewFrameEventArgs eventArgs )
-        {
-            //Console.WriteLine( eventArgs.Frame.Size );
-
-            //ShowSnapshot( (Bitmap) eventArgs.Frame.Clone( ) );
-
-            String fileName = tbOutputFolder.Text + "\\"+  DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss") + ".png";
-            Bitmap bmp = (Bitmap)eventArgs.Frame.Clone();
-            bmp.Save(fileName);
-        }
+       
 
        
         private void InitSerial()
@@ -181,76 +127,61 @@ namespace Snapshot_Maker
                _serial.RtsEnable = true;
                _serial.DtrEnable = true;
                _serial.Open();
+
+               _logger.WriteInfo("Serial port " + cmbPort.Text + " is opened");
            }
            catch(Exception ex)
            {
-               MessageBox.Show(ex.Message);
+               _logger.WriteError("Failed to open serial port - " + ex.Message);
            }
             
         }
 
         void _serial_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            _take = true;
+            _logger.WriteInfo("Serial port new data received");
+            TakePicture();
         }
 
         void _serial_PinChanged(object sender, SerialPinChangedEventArgs e)
         {
-            //throw new NotImplementedException();
-            _take = true;
-        }
+            _logger.WriteInfo("Serial port pin state changed");
+            TakePicture();
+          }
 
         private void StartCapture()
         {
-            if (_videoDevice != null)
+            try
             {
-                if ((_videoCapabilities != null) && (_videoCapabilities.Length != 0))
-                {
-                    //videoDevice.VideoResolution = videoCapabilities[videoResolutionsCombo.SelectedIndex];
-                    _videoDevice.VideoResolution = _videoCapabilities[0];
-
-                }
-
-                if ((_snapshotCapabilities != null) && (_snapshotCapabilities.Length != 0))
-                {
-                    _videoDevice.ProvideSnapshots = true;
-                    _videoDevice.SnapshotResolution = _snapshotCapabilities[0];
-               
-                    _videoDevice.NewFrame += videoDevice_NewFrame;
-                    _videoDevice.SnapshotFrame += videoDevice_SnapshotFrame;
-                }
-
+                _media.Start(pbVideo, cmbDevices.Text);
                 EnableControls(false);
-
-                videoSourcePlayer.VideoSource = _videoDevice;
-                videoSourcePlayer.AutoSizeControl = false;
-                videoSourcePlayer.Start();
-         
-
                 btnCapture.Text = "Stop capture";
+                _logger.WriteInfo("Capture started, device - " + cmbDevices.Text);
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteError("Failed to start capture - " + ex.Message);
             }
         }
 
-        void videoDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
-        {
-           if (_take == true)
-           {
-               try
-               {
-                   if (Directory.Exists(tbOutputFolder.Text) == true)
-                   {
-                       string fileName = tbOutputFolder.Text + @"\\" + DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss") + ".png";
-                       Bitmap bmp = (Bitmap)eventArgs.Frame.Clone();
-                       bmp.Save(fileName);
-                       _take = false;
-                   }
-               }
-               catch(Exception)
-               {
 
-               }
-           }
+        private void StopCapture()
+        {
+            try
+            {                
+                _media.Stop();
+                EnableControls(true);
+                btnCapture.Text = "Start capture";
+                _logger.WriteInfo("Capture stopped");
+            }
+            catch(Exception ex)
+            {
+                _logger.WriteError("Failed to stop capture - " + ex.Message);
+            }
         }
+
+
+       
 
         private void btnCapture_Click(object sender, EventArgs e)
         {
@@ -289,6 +220,34 @@ namespace Snapshot_Maker
             Settings.Default.Reload();
             tbOutputFolder.Text = Settings.Default.OutputFolder;
             cmbPort.Text = Settings.Default.ComPort;
+        }
+
+        private void btnPicture_Click(object sender, EventArgs e)
+        {
+            TakePicture();
         }  
+
+        private void TakePicture()
+        {
+            _logger.WriteInfo("Trying to make a screenshoot");
+            try
+            {
+                btnPicture.Enabled = false;
+                if (Directory.Exists(tbOutputFolder.Text) == false)
+                    throw new Exception("Folder " + tbOutputFolder.Text + " doesn't exist");
+
+                string fileName = tbOutputFolder.Text + @"\" + DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss") + ".png";
+                _media.TakePicture(fileName);
+                _logger.WriteInfo("Screenshoot is made and saved to " + fileName);
+            }
+            catch(Exception ex)
+            {
+                _logger.WriteError("Failed to make a screenshoot - " + ex.Message);
+            }
+            finally
+            {
+                btnPicture.Enabled = true;
+            }
+        }
     }
 }

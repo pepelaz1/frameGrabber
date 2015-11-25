@@ -1,4 +1,4 @@
-﻿namespace Snapshot_Maker
+﻿namespace FrameGrabberApp
 {
     partial class MainForm
     {
@@ -33,7 +33,7 @@
             this.cmbDevices = new System.Windows.Forms.ComboBox();
             this.btnCapture = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.videoSourcePlayer = new AForge.Controls.VideoSourcePlayer();
+            this.pbVideo = new System.Windows.Forms.PictureBox();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.btnPicture = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -42,6 +42,7 @@
             this.tbOutputFolder = new System.Windows.Forms.TextBox();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pbVideo)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -61,7 +62,6 @@
             this.cmbDevices.Name = "cmbDevices";
             this.cmbDevices.Size = new System.Drawing.Size(176, 21);
             this.cmbDevices.TabIndex = 1;
-            this.cmbDevices.SelectedIndexChanged += new System.EventHandler(this.devicesCombo_SelectedIndexChanged);
             // 
             // btnCapture
             // 
@@ -75,21 +75,19 @@
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.videoSourcePlayer);
+            this.panel1.Controls.Add(this.pbVideo);
             this.panel1.Location = new System.Drawing.Point(1, 2);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(780, 472);
             this.panel1.TabIndex = 8;
             // 
-            // videoSourcePlayer
+            // pbVideo
             // 
-            this.videoSourcePlayer.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.videoSourcePlayer.ForeColor = System.Drawing.Color.DarkRed;
-            this.videoSourcePlayer.Location = new System.Drawing.Point(14, 10);
-            this.videoSourcePlayer.Name = "videoSourcePlayer";
-            this.videoSourcePlayer.Size = new System.Drawing.Size(757, 447);
-            this.videoSourcePlayer.TabIndex = 0;
-            this.videoSourcePlayer.VideoSource = null;
+            this.pbVideo.Location = new System.Drawing.Point(14, 10);
+            this.pbVideo.Name = "pbVideo";
+            this.pbVideo.Size = new System.Drawing.Size(757, 444);
+            this.pbVideo.TabIndex = 1;
+            this.pbVideo.TabStop = false;
             // 
             // toolTip
             // 
@@ -106,7 +104,7 @@
             this.btnPicture.TabIndex = 9;
             this.btnPicture.Text = "Take picture";
             this.btnPicture.UseVisualStyleBackColor = true;
-            this.btnPicture.Click += new System.EventHandler(this.triggerButton_Click);
+            this.btnPicture.Click += new System.EventHandler(this.btnPicture_Click);
             // 
             // label2
             // 
@@ -183,10 +181,11 @@
             this.MinimumSize = new System.Drawing.Size(535, 440);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Frame Grabber Application";
+            this.Text = "Frame Grabber Application v7";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pbVideo)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -198,7 +197,6 @@
         private System.Windows.Forms.ComboBox cmbDevices;
         private System.Windows.Forms.Button btnCapture;
         private System.Windows.Forms.Panel panel1;
-        private AForge.Controls.VideoSourcePlayer videoSourcePlayer;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.Button btnPicture;
         private System.Windows.Forms.Label label2;
@@ -206,6 +204,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox tbOutputFolder;
         private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.PictureBox pbVideo;
     }
 }
 

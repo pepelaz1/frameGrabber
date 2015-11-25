@@ -49,25 +49,11 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AForge">
-      <HintPath>packages\AForge.2.2.5\lib\AForge.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Controls">
-      <HintPath>packages\AForge.Controls.2.2.5\lib\AForge.Controls.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Imaging">
-      <HintPath>packages\AForge.Imaging.2.2.5\lib\AForge.Imaging.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Math">
-      <HintPath>packages\AForge.Math.2.2.5\lib\AForge.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video">
-      <HintPath>packages\AForge.Video.2.2.5\lib\AForge.Video.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Video.DirectShow">
-      <HintPath>packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll</HintPath>
+    <Reference Include="DirectShowLib-2005">
+      <HintPath>packages\DirectShow.NET\DirectShowLib-2005.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -75,11 +61,15 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logger.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Media.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
