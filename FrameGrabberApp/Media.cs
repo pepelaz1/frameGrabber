@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace FrameGrabberApp
@@ -75,17 +76,21 @@ namespace FrameGrabberApp
                 hr = filterGraph2.AddSourceFilterForMoniker(dev.Mon, null, dev.Name, out sourceFilter);
                 DsError.ThrowExceptionForHR(hr);
 
-                //IFilterGraph2 fg2;
-               // fg2.AddSourceFilterForMoniker()
-               // sourceFilter = (graphBuilder as IFileSinkFilter2).
+       
 
                 // Add Capture filter to our graph.
                 hr = this.graphBuilder.AddFilter(sourceFilter, "Video Capture");
                 DsError.ThrowExceptionForHR(hr);
 
+                
+               
+                IBaseFilter rendererFilter =  new VideoMixingRenderer() as IBaseFilter;
+                hr = this.graphBuilder.AddFilter(rendererFilter, "Video Mixing Renderer");
+                DsError.ThrowExceptionForHR(hr);
+
                 // Render the preview pin on the video capture filter
                 // Use this instead of this.graphBuilder.RenderFile
-                hr = this.captureGraphBuilder.RenderStream(PinCategory.Preview, MediaType.Video, sourceFilter, null, null);
+                hr = this.captureGraphBuilder.RenderStream(PinCategory.Preview, MediaType.Video, sourceFilter, null, rendererFilter);
                 DsError.ThrowExceptionForHR(hr);
 
                 // Now that the filter has been added to the graph and we have
@@ -212,13 +217,34 @@ namespace FrameGrabberApp
                     _logger.WriteInfo("Graph is paused now");
                     break;
                 }
-             
-                hr = basicVideo.GetCurrentImage(ref size, p);
-                DsError.ThrowExceptionForHR(hr);
 
-                p = Marshal.AllocHGlobal(size);
-                basicVideo.GetCurrentImage(ref size, p);
+              //  Thread.Sleep(500);
+             
+                //hr = basicVideo.GetCurrentImage(ref size, p);
                 //DsError.ThrowExceptionForHR(hr);
+                //_logger.WriteInfo("GetCurrentImage size="+size.ToString());
+
+                //p = Marshal.AllocHGlobal(size);
+                //hr = basicVideo.GetCurrentImage(ref size, p);
+                //_logger.WriteInfo("GetCurrentImage data=" + p.ToString());
+                //DsError.ThrowExceptionForHR(hr);
+                for(int i= 0; i < 10; i++)
+                {
+                    size = 0;
+                    _logger.WriteInfo("Trying to get current image");
+                    basicVideo.GetCurrentImage(ref size, p);
+                    p = Marshal.AllocHGlobal(size);
+                    hr = basicVideo.GetCurrentImage(ref size, p);
+                    if (hr == 0)
+                    {
+                        _logger.WriteInfo("Image successfully taken");
+                        break;
+                    }
+
+                    _logger.WriteError("Failed to get current image - " + DsError.GetErrorText(hr));
+                    Marshal.FreeHGlobal(p);
+                    Thread.Sleep(100);
+                }
             }
             catch (Exception ex)
             {
@@ -232,6 +258,7 @@ namespace FrameGrabberApp
 
             BitmapInfoHeader head;
             head = (BitmapInfoHeader)Marshal.PtrToStructure(p, typeof(BitmapInfoHeader));
+   
             int width = head.Width;
             int height = head.Height;
             int stride = width * (head.BitCount / 8);
@@ -256,9 +283,8 @@ namespace FrameGrabberApp
 
             Bitmap b = new Bitmap(width, height, stride, pixelFormat, p);
             b.RotateFlip(RotateFlipType.RotateNoneFlipY);
-            b.Save(fileName, ImageFormat.Png);  
-      
-            
+            b.Save(fileName, ImageFormat.Png);
+            Marshal.FreeHGlobal(p);            
         }
 
         protected override void WndProc(ref Message m)

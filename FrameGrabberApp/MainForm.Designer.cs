@@ -181,7 +181,7 @@
             this.MinimumSize = new System.Drawing.Size(535, 440);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Frame Grabber Application v8";
+            this.Text = "Frame Grabber Application v10";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.panel1.ResumeLayout(false);
