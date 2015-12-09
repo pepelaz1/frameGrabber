@@ -36,6 +36,8 @@ namespace FrameGrabberApp
         DsROTEntry rot = null;
         DsDevice[] _devices;
         Logger _logger;
+        List<string> _resolutions = new List<string>();
+        
 
         public void Init(Logger logger)
         {
@@ -57,7 +59,7 @@ namespace FrameGrabberApp
             _devices = DsDevice.GetDevicesOfCat(FilterCategory.VideoInputDevice);
         }
 
-        public void Start(PictureBox pb, String deviceName)
+        public void Start(PictureBox pb, String deviceName, String resolution)
         {
             if (captureGraphBuilder == null)
                 Init(_logger);
@@ -76,7 +78,8 @@ namespace FrameGrabberApp
                 hr = filterGraph2.AddSourceFilterForMoniker(dev.Mon, null, dev.Name, out sourceFilter);
                 DsError.ThrowExceptionForHR(hr);
 
-       
+
+                ConfigureSource(sourceFilter, resolution);
 
                 // Add Capture filter to our graph.
                 hr = this.graphBuilder.AddFilter(sourceFilter, "Video Capture");
@@ -153,6 +156,77 @@ namespace FrameGrabberApp
             Marshal.ReleaseComObject(this.captureGraphBuilder); this.captureGraphBuilder = null;
         }
         
+        private void ConfigureSource(IBaseFilter sourceFilter, String resolution)
+        {
+            int hr = 0;
+            object o;
+            AMMediaType amt = null;
+
+            string []parts = resolution.Split("x".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            hr = captureGraphBuilder.FindInterface(PinCategory.Capture, MediaType.Video, sourceFilter, typeof(IAMStreamConfig).GUID, out o);
+            IAMStreamConfig videoStreamConfig = o as IAMStreamConfig;
+
+            try
+            {
+                if (videoStreamConfig == null)
+                {
+                    throw new Exception("Failed to get IAMStreamConfig");
+                }
+
+                hr = videoStreamConfig.GetFormat(out amt);
+                DsError.ThrowExceptionForHR(hr);
+
+                if (amt.formatType == FormatType.VideoInfo)
+                {
+                    VideoInfoHeader v = new VideoInfoHeader();
+                    Marshal.PtrToStructure(amt.formatPtr, v);
+                    v.BmiHeader.Width = int.Parse(parts[0]);
+                    v.BmiHeader.Height = int.Parse(parts[1]);
+                    Marshal.StructureToPtr(v, amt.formatPtr, false);
+                }
+                else if (amt.formatType == FormatType.VideoInfo2)
+                {
+                    VideoInfoHeader2 v = new VideoInfoHeader2();
+                    Marshal.PtrToStructure(amt.formatPtr, v);
+                    v.BmiHeader.Width = int.Parse(parts[0]);
+                    v.BmiHeader.Height = int.Parse(parts[1]);
+                    Marshal.StructureToPtr(v, amt.formatPtr, false);
+                }
+                else
+                {
+                    throw new Exception("Unknown input video format");
+                }
+
+                // Set the new format
+                hr = videoStreamConfig.SetFormat(amt);
+                DsError.ThrowExceptionForHR(hr);
+
+                DsUtils.FreeAMMediaType(amt);
+                amt = null;
+
+                //// Fix upsidedown video
+                //if (videoControl != null)
+                //{
+                //    VideoControlFlags pCapsFlags;
+
+                //    IPin pPin = DsFindPin.ByCategory(capFilter, PinCategory.Capture, 0);
+                //    hr = videoControl.GetCaps(pPin, out pCapsFlags);
+                //    DsError.ThrowExceptionForHR(hr);
+
+                //    if ((pCapsFlags & VideoControlFlags.FlipVertical) > 0)
+                //    {
+                //        hr = videoControl.GetMode(pPin, out pCapsFlags);
+                //        DsError.ThrowExceptionForHR(hr);
+
+                //        hr = videoControl.SetMode(pPin, 0);
+                //    }
+                //}
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(videoStreamConfig);
+            }
+        }
 
         public void SetupVideoWindow()
         {
@@ -196,7 +270,7 @@ namespace FrameGrabberApp
             return result;
         }
       
-        public void TakePicture(string fileName)
+        public Bitmap TakePicture()
         {
             int hr = 0;
             int size = 0;
@@ -218,16 +292,7 @@ namespace FrameGrabberApp
                     break;
                 }
 
-              //  Thread.Sleep(500);
-             
-                //hr = basicVideo.GetCurrentImage(ref size, p);
-                //DsError.ThrowExceptionForHR(hr);
-                //_logger.WriteInfo("GetCurrentImage size="+size.ToString());
-
-                //p = Marshal.AllocHGlobal(size);
-                //hr = basicVideo.GetCurrentImage(ref size, p);
-                //_logger.WriteInfo("GetCurrentImage data=" + p.ToString());
-                //DsError.ThrowExceptionForHR(hr);
+          
                 for(int i= 0; i < 10; i++)
                 {
                     size = 0;
@@ -280,11 +345,16 @@ namespace FrameGrabberApp
                 case 48: pixelFormat = PixelFormat.Format48bppRgb; break;
                 default: throw new Exception("Unknown BitCount");
             }
+           
 
             Bitmap b = new Bitmap(width, height, stride, pixelFormat, p);
             b.RotateFlip(RotateFlipType.RotateNoneFlipY);
-            b.Save(fileName, ImageFormat.Png);
-            Marshal.FreeHGlobal(p);            
+        
+
+            Marshal.FreeHGlobal(p);
+
+            return b;
+             
         }
 
         protected override void WndProc(ref Message m)
@@ -328,6 +398,61 @@ namespace FrameGrabberApp
             }
         }
    
+        public List<string> GetAvailResolutions(string deviceName)
+        {
+            int hr = 0;
+            DsDevice dev = _devices.Where(d => d.Name == deviceName).First();
+            if (captureGraphBuilder == null)
+                Init(_logger);
+
+       
+            _resolutions.Clear();
+            IBaseFilter capFilter = null;
+            hr = filterGraph2.AddSourceFilterForMoniker(dev.Mon, null, dev.Name, out capFilter);
+            DsError.ThrowExceptionForHR(hr);
+
+            // Find the stream config interface
+            object o;
+            hr = captureGraphBuilder.FindInterface(PinCategory.Capture, MediaType.Video, capFilter, typeof(IAMStreamConfig).GUID, out o);
+
+            IAMStreamConfig config = o as IAMStreamConfig;
+            int cnt = 0;
+            int size = 0;
+            hr = config.GetNumberOfCapabilities(out cnt, out size);
+            DsError.ThrowExceptionForHR(hr);
+            
+            IntPtr buff = Marshal.AllocCoTaskMem(size);
+            for (int i = 0; i < cnt; i++ )
+            {
+                AMMediaType amt = null;
+                hr = config.GetStreamCaps(i, out amt, buff);
+                DsError.ThrowExceptionForHR(hr);
+
+                if (amt.formatType == FormatType.VideoInfo)
+                {
+                    VideoInfoHeader v = new VideoInfoHeader();
+                    Marshal.PtrToStructure(amt.formatPtr, v);
+                    string s = v.BmiHeader.Width.ToString() + "x" + Math.Abs(v.BmiHeader.Height).ToString();
+                    if (_resolutions.Contains(s) == false)
+                        _resolutions.Add(s);
+                }
+                else if (amt.formatType == FormatType.VideoInfo2)
+                {
+                    VideoInfoHeader2 v = new VideoInfoHeader2();
+                    Marshal.PtrToStructure(amt.formatPtr, v);
+                    string s = v.BmiHeader.Width.ToString() + "x" + Math.Abs(v.BmiHeader.Height).ToString();
+                    if (_resolutions.Contains(s) == false)
+                        _resolutions.Add(s);
+                }
+                DsUtils.FreeAMMediaType(amt);
+            }
+
+            Marshal.FreeCoTaskMem(buff);
+            Marshal.ReleaseComObject(capFilter);
+            Marshal.ReleaseComObject(config);
+
+            return _resolutions;
+        }
 
     }
 }

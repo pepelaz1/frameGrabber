@@ -10,6 +10,8 @@ using FrameGrabberApp.Properties;
 using System.IO;
 using FrameGrabberApp;
 using System.Reflection;
+using System.Linq;
+using System.Drawing.Imaging;
 
 namespace FrameGrabberApp
 {
@@ -18,6 +20,9 @@ namespace FrameGrabberApp
         private SerialPort _serial = new SerialPort();
         private Media _media = new Media();
         private Logger _logger = new Logger();
+        private List<PictureBox> _pboxes = new List<PictureBox>();
+        private List<Label> _pnames = new List<Label>();
+        private List<Label> _presults = new List<Label>();
 
         public MainForm( )
         {
@@ -45,6 +50,8 @@ namespace FrameGrabberApp
 
                 InitSerial();
 
+                InitThumbs();
+                
                 StartCapture();
             }
             catch (Exception ex)
@@ -61,9 +68,21 @@ namespace FrameGrabberApp
             _serial.PinChanged -= _serial_PinChanged;
         }
 
+        protected override bool ProcessCmdKey(ref Message message, Keys keys)
+        {
+            switch (keys)
+            {
+                case Keys.Space:
+                    TakePicture();
+                    return true;
+            }
+
+            return false;
+        }
         private void EnableControls( bool enable )
         {
             cmbDevices.Enabled = enable;
+            cmbResolution.Enabled = enable;
             btnPicture.Enabled = !enable;
             //cmbPort.Enabled = enable;
             tbOutputFolder.Enabled = enable;
@@ -71,43 +90,106 @@ namespace FrameGrabberApp
             
         }
 
-        //// New video device is selected
-        //private void devicesCombo_SelectedIndexChanged( object sender, EventArgs e )
-        //{
-        //    //if ( _videoDevices.Count != 0 )
-        //    //{
-        //    //    _videoDevice = new VideoCaptureDevice( _videoDevices[cmbDevices.SelectedIndex].MonikerString );
-        //    //    EnumeratedSupportedFrameSizes( _videoDevice );
-        //    //}
-        //}
 
-        // Collect supported video and snapshot sizes
-        //private void EnumeratedSupportedFrameSizes( VideoCaptureDevice videoDevice )
-        //{
-        //    this.Cursor = Cursors.WaitCursor;
-
-        //    try
-        //    {
-        //        //_videoCapabilities = videoDevice.VideoCapabilities;
-        //        //_snapshotCapabilities = videoDevice.SnapshotCapabilities;
-        //    }
-        //    finally
-        //    {
-        //        this.Cursor = Cursors.Default;
-        //    }
-        //}
-
-  
-
-       
-        // Simulate snapshot trigger
-        private void triggerButton_Click( object sender, EventArgs e )
+        private void InitThumbs()
         {
+            _pboxes.Add(pictureBox1);
+            _pboxes.Add(pictureBox2);
+            _pboxes.Add(pictureBox3);
+            _pboxes.Add(pictureBox4);
+            _pboxes.Add(pictureBox5);
+
+            _pnames.Add(pname1);
+            _pnames.Add(pname2);
+            _pnames.Add(pname3);
+            _pnames.Add(pname4);
+            _pnames.Add(pname5);
+
+            _presults.Add(presult1);
+            _presults.Add(presult2);
+            _presults.Add(presult3);
+            _presults.Add(presult4);
+            _presults.Add(presult5);
+
+            RebuildThumbs();
+        }
+      
+        private void SaveThumb(Bitmap bmp, string fileName, bool result)
+        {
+            try
+            {
+                _logger.WriteInfo("Save thumbnail - " + fileName);
+                string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + @"\thumbs";
+                if (Directory.Exists(path) == false)
+                    Directory.CreateDirectory(path);
+
+                var directory = new DirectoryInfo(path);
+
+             
+
+                // Delete oldest file
+                if (directory.GetFiles().Count() > 4)
+                     directory.GetFiles().OrderBy(f => f.LastWriteTime).First().Delete();
+    
+ 
+                fileName = result ? "1_" + fileName : "0_" + fileName;
+
+                bmp.Save(path + @"\" + fileName, ImageFormat.Png);               
+                RebuildThumbs();
+            }
+            catch(Exception ex)
+            {
+                _logger.WriteError("Failed to save thumbnail - " + ex.Message);
+            }
         }
 
-       
+        private void RebuildThumbs()
+        {
+            try 
+            {
+                 _logger.WriteInfo("Rebuilding thumbnails");
+                string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + @"\thumbs";
+                if (Directory.Exists(path) == false)
+                    Directory.CreateDirectory(path);
 
-       
+                for (int i = 0; i < 5; i++)
+                {
+                    _pboxes[i].Image = null;   
+                    _pnames[i].Text = "";
+                    _presults[i].Text = "";
+                }
+
+                int n = 0;
+                var directory = new DirectoryInfo(path);
+                foreach (var f in  directory.GetFiles()
+                          .OrderByDescending(f => f.LastWriteTime))
+                {
+                    _presults[n].Text = "\u2713";
+                    using (var bmp = new Bitmap(f.FullName))
+                    {
+                        _pboxes[n].Image = new Bitmap(bmp);
+                        _pnames[n].Text = f.Name.Remove(0, 2);
+
+                        if (f.Name.Substring(0, 1) == "1")
+                        {
+                            _presults[n].Text = "\u2713";
+                            _presults[n].ForeColor = Color.Green;
+                        }
+                        else
+                        {
+                            _presults[n].Text = "\u2718";
+                            _presults[n].ForeColor = Color.Red;
+                        }               
+                    }
+                    n++;
+                }     
+            }
+            catch(Exception ex) 
+            {
+                 _logger.WriteError("Failed to rebuid thumbnails - " + ex.Message);
+            }   
+        }
+
         private void InitSerial()
         {
            if (_serial.IsOpen)
@@ -153,7 +235,7 @@ namespace FrameGrabberApp
         {
             try
             {
-                _media.Start(pbVideo, cmbDevices.Text);
+                _media.Start(pbVideo, cmbDevices.Text, cmbResolution.Text);
                 EnableControls(false);
                 btnCapture.Text = "Stop capture";
                 _logger.WriteInfo("Capture started, device - " + cmbDevices.Text);
@@ -212,6 +294,8 @@ namespace FrameGrabberApp
         {
             Settings.Default.OutputFolder = tbOutputFolder.Text;
             Settings.Default.ComPort = cmbPort.Text;
+            Settings.Default.Device = cmbDevices.Text;
+            Settings.Default.Resolution = cmbResolution.Text;
             Settings.Default.Save();
         }
 
@@ -219,7 +303,9 @@ namespace FrameGrabberApp
         {
             Settings.Default.Reload();
             tbOutputFolder.Text = Settings.Default.OutputFolder;
-            cmbPort.Text = Settings.Default.ComPort;
+            cmbPort.Text = Settings.Default.ComPort;       
+            cmbDevices.Text = Settings.Default.Device;
+            cmbResolution.Text = Settings.Default.Resolution;
         }
 
         private void btnPicture_Click(object sender, EventArgs e)
@@ -229,25 +315,47 @@ namespace FrameGrabberApp
 
         private void TakePicture()
         {
+            if (btnCapture.Text == "Start capture")
+                return;
+       
+            string fileName = "";
+            bool result = false;
+            Bitmap bmp = null;
             _logger.WriteInfo("Trying to make a screenshoot");
             try
             {
                 btnPicture.Enabled = false;
+           
+                fileName = DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss") + ".png";       
+                bmp =  _media.TakePicture();
+
+                string fullName = tbOutputFolder.Text + @"\" + fileName;
                 if (Directory.Exists(tbOutputFolder.Text) == false)
                     throw new Exception("Folder " + tbOutputFolder.Text + " doesn't exist");
 
-                string fileName = tbOutputFolder.Text + @"\" + DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss") + ".png";
-                _media.TakePicture(fileName);
+                bmp.Save(fullName, ImageFormat.Png);
+                result = true;
                 _logger.WriteInfo("Screenshoot is made and saved to " + fileName);
             }
             catch(Exception ex)
             {
                 _logger.WriteError("Failed to make a screenshoot - " + ex.Message);
+                result = false;
             }
             finally
             {
+                SaveThumb(bmp, fileName, result);
                 btnPicture.Enabled = true;
             }
         }
+
+        private void cmbDevices_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cmbResolution.Items.Clear();
+            foreach(var s in _media.GetAvailResolutions(cmbDevices.Text))
+                cmbResolution.Items.Add(s);
+            if (cmbResolution.Items.Count > 0)
+                cmbResolution.SelectedIndex = 0;
+        }   
     }
 }

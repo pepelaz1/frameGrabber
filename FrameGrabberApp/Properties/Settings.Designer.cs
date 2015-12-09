@@ -46,5 +46,29 @@ namespace FrameGrabberApp.Properties {
                 this["ComPort"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Resolution {
+            get {
+                return ((string)(this["Resolution"]));
+            }
+            set {
+                this["Resolution"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Device {
+            get {
+                return ((string)(this["Device"]));
+            }
+            set {
+                this["Device"] = value;
+            }
+        }
     }
 }

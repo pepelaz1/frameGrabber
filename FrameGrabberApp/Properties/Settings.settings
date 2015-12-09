@@ -8,5 +8,11 @@
     <Setting Name="ComPort" Type="System.String" Scope="User">
       <Value Profile="(Default)">COM1</Value>
     </Setting>
+    <Setting Name="Resolution" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Device" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>
