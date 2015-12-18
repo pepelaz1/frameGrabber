@@ -219,7 +219,7 @@
             // pictureBox4
             // 
             this.pictureBox4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-             this.pictureBox4.Location = new System.Drawing.Point(787, 342);
+            this.pictureBox4.Location = new System.Drawing.Point(787, 342);
             this.pictureBox4.Name = "pictureBox4";
             this.pictureBox4.Size = new System.Drawing.Size(144, 86);
             this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -229,7 +229,7 @@
             // pictureBox5
             // 
             this.pictureBox5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-             this.pictureBox5.Location = new System.Drawing.Point(787, 452);
+            this.pictureBox5.Location = new System.Drawing.Point(787, 452);
             this.pictureBox5.Name = "pictureBox5";
             this.pictureBox5.Size = new System.Drawing.Size(144, 86);
             this.pictureBox5.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -391,7 +391,7 @@
             this.MinimumSize = new System.Drawing.Size(535, 440);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Frame Grabber Application v12";
+            this.Text = "Frame Grabber Application v15";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.panel1.ResumeLayout(false);

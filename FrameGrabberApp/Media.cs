@@ -1,4 +1,5 @@
 ﻿using DirectShowLib;
+using DirectShowLib.DMO;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -88,17 +89,25 @@ namespace FrameGrabberApp
                 
                
                 IBaseFilter rendererFilter =  new VideoMixingRenderer() as IBaseFilter;
+                IBaseFilter clcFilter = new Colour() as IBaseFilter;
+               //  IBaseFilter rendererFilter =  new VideoRenderer() as IBaseFilter;
+
+               
+                
+                hr = this.graphBuilder.AddFilter(clcFilter, "Color space converter");
+                DsError.ThrowExceptionForHR(hr);
+
                 hr = this.graphBuilder.AddFilter(rendererFilter, "Video Mixing Renderer");
                 DsError.ThrowExceptionForHR(hr);
 
                 // Render the preview pin on the video capture filter
                 // Use this instead of this.graphBuilder.RenderFile
-                hr = this.captureGraphBuilder.RenderStream(PinCategory.Preview, MediaType.Video, sourceFilter, null, rendererFilter);
+                hr = this.captureGraphBuilder.RenderStream(PinCategory.Preview, MediaType.Video, sourceFilter, clcFilter, rendererFilter);
                 DsError.ThrowExceptionForHR(hr);
 
                 // Now that the filter has been added to the graph and we have
                 // rendered its stream, we can release this reference to the filter.
-                Marshal.ReleaseComObject(sourceFilter);
+               // Marshal.ReleaseComObject(sourceFilter);
 
                 // Set video window style and position
                 SetupVideoWindow();
@@ -163,7 +172,10 @@ namespace FrameGrabberApp
             AMMediaType amt = null;
 
             string []parts = resolution.Split("x".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            hr = captureGraphBuilder.FindInterface(PinCategory.Capture, MediaType.Video, sourceFilter, typeof(IAMStreamConfig).GUID, out o);
+            hr = captureGraphBuilder.FindInterface(PinCategory.Preview, MediaType.Video, sourceFilter, typeof(IAMStreamConfig).GUID, out o);
+          // hr = captureGraphBuilder.FindInterface(PinCategory.Capture, MediaType.Video, sourceFilter, typeof(IAMStreamConfig).GUID, out o);
+          
+
             IAMStreamConfig videoStreamConfig = o as IAMStreamConfig;
 
             try

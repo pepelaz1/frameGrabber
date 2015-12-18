@@ -35,8 +35,15 @@ namespace FrameGrabberApp
 
         private void WriteLine(string msg)
         {
-            msg = DateTime.Now.ToString("dd.MM.yyyy hh:mm:ss") + "|" + msg + Environment.NewLine;
-            File.AppendAllText(_fileName, msg);
+            try
+            {
+                msg = DateTime.Now.ToString("dd.MM.yyyy hh:mm:ss") + "|" + msg + Environment.NewLine;
+                File.AppendAllText(_fileName, msg);
+            }
+            catch(Exception)
+            {
+
+            }
         }
     }
 }

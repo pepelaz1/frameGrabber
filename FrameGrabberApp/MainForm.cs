@@ -12,6 +12,7 @@ using FrameGrabberApp;
 using System.Reflection;
 using System.Linq;
 using System.Drawing.Imaging;
+using System.Threading;
 
 namespace FrameGrabberApp
 {
@@ -219,16 +220,28 @@ namespace FrameGrabberApp
             
         }
 
+    
         void _serial_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            _logger.WriteInfo("Serial port new data received");
-            TakePicture();
+            //if (DateTime.Now - _dt > new TimeSpan(0, 0, 2))
+            //{
+            //    _logger.WriteInfo("Serial port new data received");
+            //    TakePicture();
+
+            //    _dt = DateTime.Now;
+            //}
         }
 
+        DateTime _dt = DateTime.Now;
         void _serial_PinChanged(object sender, SerialPinChangedEventArgs e)
         {
-            _logger.WriteInfo("Serial port pin state changed");
-            TakePicture();
+            if (DateTime.Now - _dt > new TimeSpan(0, 0, 1))
+            {
+                _logger.WriteInfo("Serial port pin state changed");
+                TakePicture();
+
+                _dt = DateTime.Now;
+            }
           }
 
         private void StartCapture()
@@ -311,10 +324,16 @@ namespace FrameGrabberApp
         private void btnPicture_Click(object sender, EventArgs e)
         {
             TakePicture();
-        }  
+        }
+
+        ManualResetEvent _ev = new ManualResetEvent(false);
 
         private void TakePicture()
         {
+            if (_ev.WaitOne(0) == true)
+                return;
+
+            _ev.Set();
             if (btnCapture.Text == "Start capture")
                 return;
        
@@ -344,8 +363,10 @@ namespace FrameGrabberApp
             }
             finally
             {
-                SaveThumb(bmp, fileName, result);
+                if (bmp != null)
+                     SaveThumb(bmp, fileName, result);
                 btnPicture.Enabled = true;
+                _ev.Reset();
             }
         }
 
