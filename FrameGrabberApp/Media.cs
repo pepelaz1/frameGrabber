@@ -80,14 +80,23 @@ namespace FrameGrabberApp
                 DsError.ThrowExceptionForHR(hr);
 
 
-                ConfigureSource(sourceFilter, resolution);
+                ConfigureSourceResolution(sourceFilter, resolution);
 
                 // Add Capture filter to our graph.
                 hr = this.graphBuilder.AddFilter(sourceFilter, "Video Capture");
                 DsError.ThrowExceptionForHR(hr);
 
-                
-               
+               // IBaseFilter teeFilter = new SmartTee() as IBaseFilter;
+               // hr = this.graphBuilder.AddFilter(teeFilter, "Smart Tee Filter");
+                //DsError.ThrowExceptionForHR(hr);
+
+                 //sourceFilter.FindPin()
+
+                // this.graphBuilder.Connect(sourceFilter.)
+
+              //  ConfigureSource(sourceFilter, resolution);
+
+
                 IBaseFilter rendererFilter =  new VideoMixingRenderer() as IBaseFilter;
                 IBaseFilter clcFilter = new Colour() as IBaseFilter;
                //  IBaseFilter rendererFilter =  new VideoRenderer() as IBaseFilter;
@@ -105,9 +114,11 @@ namespace FrameGrabberApp
                 hr = this.captureGraphBuilder.RenderStream(PinCategory.Preview, MediaType.Video, sourceFilter, clcFilter, rendererFilter);
                 DsError.ThrowExceptionForHR(hr);
 
+              //   ConfigureSource(sourceFilter, resolution);
+
                 // Now that the filter has been added to the graph and we have
                 // rendered its stream, we can release this reference to the filter.
-               // Marshal.ReleaseComObject(sourceFilter);
+                // Marshal.ReleaseComObject(sourceFilter);
 
                 // Set video window style and position
                 SetupVideoWindow();
@@ -165,7 +176,7 @@ namespace FrameGrabberApp
             Marshal.ReleaseComObject(this.captureGraphBuilder); this.captureGraphBuilder = null;
         }
         
-        private void ConfigureSource(IBaseFilter sourceFilter, String resolution)
+        private void ConfigureSourceResolution(IBaseFilter sourceFilter, String resolution)
         {
             int hr = 0;
             object o;
@@ -173,7 +184,8 @@ namespace FrameGrabberApp
 
             string []parts = resolution.Split("x".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             hr = captureGraphBuilder.FindInterface(PinCategory.Preview, MediaType.Video, sourceFilter, typeof(IAMStreamConfig).GUID, out o);
-          // hr = captureGraphBuilder.FindInterface(PinCategory.Capture, MediaType.Video, sourceFilter, typeof(IAMStreamConfig).GUID, out o);
+            if (hr < 0)
+                 hr = captureGraphBuilder.FindInterface(PinCategory.Capture, MediaType.Video, sourceFilter, typeof(IAMStreamConfig).GUID, out o);
           
 
             IAMStreamConfig videoStreamConfig = o as IAMStreamConfig;

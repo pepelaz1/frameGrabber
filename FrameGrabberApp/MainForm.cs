@@ -38,6 +38,8 @@ namespace FrameGrabberApp
         {
             try
             {
+                Text = "Frame Grabber Applicaion v" + Assembly.GetExecutingAssembly().GetName().Version.Major.ToString();
+
                  _media.Init(_logger);
                 foreach (string device in _media.EnumCaptureDevices())
                      cmbDevices.Items.Add(device);
@@ -377,6 +379,11 @@ namespace FrameGrabberApp
                 cmbResolution.Items.Add(s);
             if (cmbResolution.Items.Count > 0)
                 cmbResolution.SelectedIndex = 0;
-        }   
+        }
+
+        private void cmbResolution_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
