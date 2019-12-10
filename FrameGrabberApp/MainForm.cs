@@ -131,7 +131,7 @@ namespace FrameGrabberApp
              
 
                 // Delete oldest file
-                if (directory.GetFiles().Count() > 4)
+                if (directory.GetFiles().Count() > 99)
                      directory.GetFiles().OrderBy(f => f.LastWriteTime).First().Delete();
     
  

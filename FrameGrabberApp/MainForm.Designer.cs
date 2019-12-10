@@ -82,7 +82,7 @@
             this.cmbDevices.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbDevices.FormattingEnabled = true;
             this.cmbDevices.Location = new System.Drawing.Point(121, 603);
-            this.cmbDevices.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cmbDevices.Margin = new System.Windows.Forms.Padding(4);
             this.cmbDevices.Name = "cmbDevices";
             this.cmbDevices.Size = new System.Drawing.Size(233, 24);
             this.cmbDevices.TabIndex = 1;
@@ -91,7 +91,7 @@
             // btnCapture
             // 
             this.btnCapture.Location = new System.Drawing.Point(805, 652);
-            this.btnCapture.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnCapture.Margin = new System.Windows.Forms.Padding(4);
             this.btnCapture.Name = "btnCapture";
             this.btnCapture.Size = new System.Drawing.Size(115, 28);
             this.btnCapture.TabIndex = 6;
@@ -104,7 +104,7 @@
             // 
             this.panel1.Controls.Add(this.pbVideo);
             this.panel1.Location = new System.Drawing.Point(1, 2);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel1.Margin = new System.Windows.Forms.Padding(4);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1040, 581);
             this.panel1.TabIndex = 8;
@@ -112,7 +112,7 @@
             // pbVideo
             // 
             this.pbVideo.Location = new System.Drawing.Point(19, 12);
-            this.pbVideo.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pbVideo.Margin = new System.Windows.Forms.Padding(4);
             this.pbVideo.Name = "pbVideo";
             this.pbVideo.Size = new System.Drawing.Size(1009, 546);
             this.pbVideo.TabIndex = 1;
@@ -128,7 +128,7 @@
             // btnPicture
             // 
             this.btnPicture.Location = new System.Drawing.Point(928, 652);
-            this.btnPicture.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnPicture.Margin = new System.Windows.Forms.Padding(4);
             this.btnPicture.Name = "btnPicture";
             this.btnPicture.Size = new System.Drawing.Size(113, 28);
             this.btnPicture.TabIndex = 9;
@@ -161,7 +161,7 @@
             "COM7",
             "COM8"});
             this.cmbPort.Location = new System.Drawing.Point(457, 603);
-            this.cmbPort.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cmbPort.Margin = new System.Windows.Forms.Padding(4);
             this.cmbPort.Name = "cmbPort";
             this.cmbPort.Size = new System.Drawing.Size(84, 24);
             this.cmbPort.TabIndex = 11;
@@ -180,7 +180,7 @@
             // tbOutputFolder
             // 
             this.tbOutputFolder.Location = new System.Drawing.Point(669, 604);
-            this.tbOutputFolder.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbOutputFolder.Margin = new System.Windows.Forms.Padding(4);
             this.tbOutputFolder.Name = "tbOutputFolder";
             this.tbOutputFolder.Size = new System.Drawing.Size(335, 22);
             this.tbOutputFolder.TabIndex = 13;
@@ -189,7 +189,7 @@
             // btnBrowse
             // 
             this.btnBrowse.Location = new System.Drawing.Point(1004, 603);
-            this.btnBrowse.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnBrowse.Margin = new System.Windows.Forms.Padding(4);
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(37, 27);
             this.btnBrowse.TabIndex = 14;
@@ -201,7 +201,7 @@
             // 
             this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pictureBox1.Location = new System.Drawing.Point(1049, 15);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(191, 105);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -212,7 +212,7 @@
             // 
             this.pictureBox2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pictureBox2.Location = new System.Drawing.Point(1049, 150);
-            this.pictureBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox2.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(191, 105);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -223,7 +223,7 @@
             // 
             this.pictureBox3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pictureBox3.Location = new System.Drawing.Point(1049, 286);
-            this.pictureBox3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox3.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.Size = new System.Drawing.Size(191, 105);
             this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -234,7 +234,7 @@
             // 
             this.pictureBox4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pictureBox4.Location = new System.Drawing.Point(1049, 421);
-            this.pictureBox4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox4.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox4.Name = "pictureBox4";
             this.pictureBox4.Size = new System.Drawing.Size(191, 105);
             this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -245,7 +245,7 @@
             // 
             this.pictureBox5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pictureBox5.Location = new System.Drawing.Point(1049, 556);
-            this.pictureBox5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pictureBox5.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox5.Name = "pictureBox5";
             this.pictureBox5.Size = new System.Drawing.Size(191, 105);
             this.pictureBox5.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -377,7 +377,7 @@
             this.cmbResolution.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbResolution.FormattingEnabled = true;
             this.cmbResolution.Location = new System.Drawing.Point(121, 645);
-            this.cmbResolution.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cmbResolution.Margin = new System.Windows.Forms.Padding(4);
             this.cmbResolution.Name = "cmbResolution";
             this.cmbResolution.Size = new System.Drawing.Size(105, 24);
             this.cmbResolution.TabIndex = 29;
@@ -416,12 +416,12 @@
             this.Controls.Add(this.cmbDevices);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(707, 531);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Frame Grabber Application v17";
+            this.Text = "Frame Grabber Application v18";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.panel1.ResumeLayout(false);

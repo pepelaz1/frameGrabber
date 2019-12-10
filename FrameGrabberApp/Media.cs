@@ -38,7 +38,7 @@ namespace FrameGrabberApp
         DsDevice[] _devices;
         Logger _logger;
         List<string> _resolutions = new List<string>();
-        
+
 
         public void Init(Logger logger)
         {
@@ -46,6 +46,8 @@ namespace FrameGrabberApp
             _logger = logger;
 
             this.graphBuilder = (IGraphBuilder)new FilterGraph();
+
+
             this.captureGraphBuilder = (ICaptureGraphBuilder2)new CaptureGraphBuilder2();
             this.mediaControl = (IMediaControl)this.graphBuilder;
             this.videoWindow = (IVideoWindow)this.graphBuilder;
@@ -58,12 +60,31 @@ namespace FrameGrabberApp
 
             _devices = null;
             _devices = DsDevice.GetDevicesOfCat(FilterCategory.VideoInputDevice);
+
+            
+
         }
 
         public void Start(PictureBox pb, String deviceName, String resolution)
         {
             if (captureGraphBuilder == null)
                 Init(_logger);
+
+            IEnumFilters filterEnum = null;
+            graphBuilder.EnumFilters(out filterEnum);
+            filterEnum.Reset();
+
+   
+            IBaseFilter[] filters = null;
+            IntPtr f = IntPtr.Zero;
+            while (filterEnum.Next(1, filters, f) == 0)
+            {
+                graphBuilder.RemoveFilter(filters[0]);
+            }
+
+
+           // rot = new DsROTEntry(this.graphBuilder);
+          //  return;
 
             _pb = pb;
             int hr = 0;
@@ -76,6 +97,10 @@ namespace FrameGrabberApp
                // sourceFilter = FindCaptureDevice();
                 DsDevice dev = _devices.Where(d => d.Name == deviceName).First();
                 // Add the video device
+
+
+               
+
                 hr = filterGraph2.AddSourceFilterForMoniker(dev.Mon, null, dev.Name, out sourceFilter);
                 DsError.ThrowExceptionForHR(hr);
 
@@ -83,21 +108,24 @@ namespace FrameGrabberApp
                 ConfigureSourceResolution(sourceFilter, resolution);
 
                 // Add Capture filter to our graph.
-                hr = this.graphBuilder.AddFilter(sourceFilter, "Video Capture");
-                DsError.ThrowExceptionForHR(hr);
+               // hr = this.graphBuilder.AddFilter(sourceFilter, "Video Capture");
+               // DsError.ThrowExceptionForHR(hr);
 
-               // IBaseFilter teeFilter = new SmartTee() as IBaseFilter;
-               // hr = this.graphBuilder.AddFilter(teeFilter, "Smart Tee Filter");
+               // rot = new DsROTEntry(this.graphBuilder);
+               // return;
+
+                // IBaseFilter teeFilter = new SmartTee() as IBaseFilter;
+                // hr = this.graphBuilder.AddFilter(teeFilter, "Smart Tee Filter");
                 //DsError.ThrowExceptionForHR(hr);
 
-                 //sourceFilter.FindPin()
+                //sourceFilter.FindPin()
 
                 // this.graphBuilder.Connect(sourceFilter.)
 
-              //  ConfigureSource(sourceFilter, resolution);
+                //  ConfigureSource(sourceFilter, resolution);
 
 
-                IBaseFilter rendererFilter =  new VideoMixingRenderer() as IBaseFilter;
+                IBaseFilter rendererFilter =  new VideoMixingRenderer9() as IBaseFilter;
                 IBaseFilter clcFilter = new Colour() as IBaseFilter;
                //  IBaseFilter rendererFilter =  new VideoRenderer() as IBaseFilter;
 
@@ -106,7 +134,7 @@ namespace FrameGrabberApp
                 hr = this.graphBuilder.AddFilter(clcFilter, "Color space converter");
                 DsError.ThrowExceptionForHR(hr);
 
-                hr = this.graphBuilder.AddFilter(rendererFilter, "Video Mixing Renderer");
+                hr = this.graphBuilder.AddFilter(rendererFilter, "Video Mixing Renderer 9");
                 DsError.ThrowExceptionForHR(hr);
 
                 // Render the preview pin on the video capture filter
@@ -273,6 +301,8 @@ namespace FrameGrabberApp
             // Make the video window visible, now that it is properly positioned
             hr = this.videoWindow.put_Visible(OABool.True);
             DsError.ThrowExceptionForHR(hr);
+
+           
         }
 
         public void ResizeVideoWindow()
@@ -281,6 +311,7 @@ namespace FrameGrabberApp
             if (this.videoWindow != null)
             {
                 this.videoWindow.SetWindowPosition(0, 0, _pb.ClientSize.Width, _pb.ClientSize.Height);
+              
             }
         }
 
